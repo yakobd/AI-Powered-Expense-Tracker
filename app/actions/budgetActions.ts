@@ -3,6 +3,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { checkUser } from "@/lib/checkUser";
 
 export interface Budget {
   id: string;
@@ -18,9 +19,10 @@ export interface Budget {
 }
 
 export async function createBudget(formData: FormData) {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
@@ -37,7 +39,7 @@ export async function createBudget(formData: FormData) {
     const existingBudget = await db.budget.findUnique({
       where: {
         userId_category_period: {
-          userId,
+          userId: user.clerkUserId,
           category,
           period,
         },
@@ -61,7 +63,7 @@ export async function createBudget(formData: FormData) {
       // Create new budget
       const budget = await db.budget.create({
         data: {
-          userId,
+          userId: user.clerkUserId,
           category,
           amount,
           period,
