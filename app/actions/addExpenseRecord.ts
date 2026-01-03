@@ -70,7 +70,6 @@ async function addExpenseRecord(formData: FormData): Promise<RecordResult> {
         category,
         date, // Save the date to the database
         userId: user.clerkUserId, // Use the user's clerkUserId
-        userId,
       },
     });
 

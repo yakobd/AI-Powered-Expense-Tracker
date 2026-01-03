@@ -81,16 +81,17 @@ export async function createBudget(formData: FormData) {
 }
 
 export async function getBudgets(): Promise<{ budgets?: Budget[]; error?: string }> {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
   try {
     const budgets = await db.budget.findMany({
       where: { 
-        userId,
+        userId: user.clerkUserId,
         isActive: true,
       },
       orderBy: { createdAt: "desc" },
@@ -123,7 +124,7 @@ export async function getBudgets(): Promise<{ budgets?: Budget[]; error?: string
         // Get spending for this category in the budget period
         const records = await db.record.findMany({
           where: {
-            userId,
+            userId: user.clerkUserId,
             category: budget.category,
             date: {
               gte: startDate,
@@ -159,9 +160,10 @@ export async function getBudgets(): Promise<{ budgets?: Budget[]; error?: string
 }
 
 export async function deleteBudget(budgetId: string) {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
@@ -169,7 +171,7 @@ export async function deleteBudget(budgetId: string) {
     await db.budget.update({
       where: {
         id: budgetId,
-        userId,
+        userId: user.clerkUserId,
       },
       data: {
         isActive: false,
@@ -185,9 +187,10 @@ export async function deleteBudget(budgetId: string) {
 }
 
 export async function getBudgetOverview() {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 

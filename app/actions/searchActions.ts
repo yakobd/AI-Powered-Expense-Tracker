@@ -2,6 +2,7 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { checkUser } from "@/lib/checkUser";
 
 export interface SearchFilters {
   query?: string;
@@ -27,15 +28,16 @@ export async function searchExpenses(
   page: number = 1,
   limit: number = 20
 ): Promise<{ result?: SearchResult; error?: string }> {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
   try {
     // Build where clause
-    const where: any = { userId };
+    const where: any = { userId: user.clerkUserId };
 
     // Text search
     if (filters.query) {
@@ -130,15 +132,16 @@ export async function searchExpenses(
 }
 
 export async function getExpenseCategories(): Promise<{ categories?: string[]; error?: string }> {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
   try {
     const categories = await db.record.findMany({
-      where: { userId },
+      where: { userId: user.clerkUserId },
       select: { category: true },
       distinct: ['category'],
       orderBy: { category: 'asc' },
@@ -163,15 +166,16 @@ export async function getExpenseStats(): Promise<{
   };
   error?: string;
 }> {
-  const { userId } = await auth();
+  // Ensure user exists in database
+  const user = await checkUser();
   
-  if (!userId) {
+  if (!user) {
     return { error: "User not authenticated" };
   }
 
   try {
     const records = await db.record.findMany({
-      where: { userId },
+      where: { userId: user.clerkUserId },
       select: {
         amount: true,
         category: true,
