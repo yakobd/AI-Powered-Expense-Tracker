@@ -31,11 +31,13 @@ interface Record {
 }
 
 const BarChart = ({ records }: { records: Record[] }) => {
-  const { theme } = useTheme();
+  const { theme, mounted } = useTheme();
   const isDark = theme === "dark";
   const [windowWidth, setWindowWidth] = useState(1024); // Default to desktop width
 
   useEffect(() => {
+    if (!mounted) return;
+    
     // Set initial window width
     setWindowWidth(window.innerWidth);
 
@@ -46,7 +48,7 @@ const BarChart = ({ records }: { records: Record[] }) => {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [mounted]);
 
   const isMobile = windowWidth < 640;
 

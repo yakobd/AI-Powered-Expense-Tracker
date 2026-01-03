@@ -7,6 +7,7 @@ type Theme = "light" | "dark";
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
+  mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -16,17 +17,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    // Check localStorage first, then system preference
+    // Get the current theme from localStorage or system preference
     const savedTheme = localStorage.getItem("theme") as Theme;
-    if (savedTheme) {
-      setTheme(savedTheme);
-    } else {
-      const systemPrefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      setTheme(systemPrefersDark ? "dark" : "light");
-    }
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const currentTheme = savedTheme || (systemPrefersDark ? "dark" : "light");
+    
+    setTheme(currentTheme);
+    setMounted(true);
   }, []);
 
   useEffect(() => {
@@ -44,9 +41,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prev) => (prev === "light" ? "dark" : "light"));
   };
 
-  // Always render the provider, but handle mounting gracefully
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, mounted }}>
       {children}
     </ThemeContext.Provider>
   );
